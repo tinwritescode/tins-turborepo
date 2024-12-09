@@ -2,9 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "foreignKeys"
 }
 
 generator client {
@@ -12,8 +12,23 @@ generator client {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id @default(uuid())
   name          String?
   email         String?   @unique
   emailVerified DateTime?
+}
+
+model PriceLog {
+  id        String   @id @default(uuid())
+  price     Float
+  timestamp DateTime @default(now())
+  token     Token?   @relation(fields: [tokenId], references: [id])
+  tokenId   String?
+}
+
+model Token {
+  id        String     @id @default(uuid())
+  name      String
+  symbol    String
+  priceLogs PriceLog[]
 }

@@ -17,3 +17,8 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
     volumes:
       - database:/var/lib/mysql
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
