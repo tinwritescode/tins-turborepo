@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TokenService } from './services/token.service';
@@ -13,15 +13,21 @@ import { YoutubeCrawlerModule } from './modules/youtube-crawler/youtube-crawler.
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    BullModule.forRoot({
-      connection: {
-        host: 'localhost',
-        port: 6379,
-      },
-      defaultJobOptions: {
-        removeOnComplete: true,
-        removeOnFail: false,
-      },
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get('REDIS_HOST'),
+          port: parseInt(configService.get('REDIS_PORT')),
+          username: configService.get('REDIS_USERNAME'),
+          password: configService.get('REDIS_PASSWORD'),
+        },
+        defaultJobOptions: {
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      }),
+      inject: [ConfigService],
     }),
     BullBoardModule.forRoot({
       route: '/bull-board',
