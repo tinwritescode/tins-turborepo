@@ -1,8 +1,7 @@
 "use client";
 
 import { Edit, useForm, useSelect } from "@refinedev/antd";
-import { Form, Input, DatePicker } from "antd";
-import React from "react";
+import { DatePicker, Form, Input, Select } from "antd";
 
 export default function VideoEdit() {
   const { formProps, saveButtonProps, queryResult } = useForm({});
