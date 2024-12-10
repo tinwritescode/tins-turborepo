@@ -28,30 +28,32 @@ RUN pnpm install --frozen-lockfile
 # Generate Prisma Client
 RUN pnpm run generate
 
-# Build application using turbo
-RUN pnpm turbo run build --filter=server...
+CMD ["tail", "-f", "/dev/null"]
 
-# Production stage
-FROM node:20.18.0-slim
+# # Build application using turbo
+# RUN pnpm turbo run build --filter=server...
 
-WORKDIR /app
+# # Production stage
+# FROM node:20.18.0-slim
 
-# Install production dependencies only
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y openssl && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+# WORKDIR /app
 
-# Copy built application
-COPY --from=builder /app/apps/server/dist ./dist
-COPY --from=builder /app/apps/server/package.json ./
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+# # Install production dependencies only
+# RUN apt-get update -qq && \
+#     apt-get install --no-install-recommends -y openssl && \
+#     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# # Copy built application
+# COPY --from=builder /app/apps/server/dist ./dist
+# COPY --from=builder /app/apps/server/package.json ./
+# COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-# Set production environment
-ENV NODE_ENV="production"
+# # Set production environment
+# ENV NODE_ENV="production"
 
-# Expose the port the app runs on
-EXPOSE 3100
+# # Expose the port the app runs on
+# EXPOSE 3100
 
-# Start the server
-CMD [ "node", "dist/main.js" ]
+# # Start the server
+# CMD [ "node", "dist/main.js" ]
