@@ -13,4 +13,12 @@ export class MoralisService implements OnModuleInit {
     });
     console.log('Moralis has been started');
   }
+
+  async getTokenPriceInUsd(address: string) {
+    const token = await Moralis.EvmApi.token.getTokenPrice({
+      address,
+      chain: '0x1',
+    });
+    return token.result.usdPrice;
+  }
 }

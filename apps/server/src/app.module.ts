@@ -4,8 +4,11 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TokenService } from './services/token.service';
-import { PriceCrawlerModule } from './modules/price-crawler.module';
+import { PriceCrawlerModule } from './modules/price-crawler/price-crawler.module';
 import { PrismaService } from './services/prisma.service';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { ExpressAdapter } from '@bull-board/express';
+import { YoutubeCrawlerModule } from './modules/youtube-crawler/youtube-crawler.module';
 
 @Module({
   imports: [
@@ -20,7 +23,12 @@ import { PrismaService } from './services/prisma.service';
         removeOnFail: false,
       },
     }),
+    BullBoardModule.forRoot({
+      route: '/bull-board',
+      adapter: ExpressAdapter,
+    }),
     PriceCrawlerModule,
+    YoutubeCrawlerModule,
   ],
   controllers: [AppController],
   providers: [AppService, TokenService, PrismaService],

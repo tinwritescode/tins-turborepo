@@ -9,6 +9,7 @@
     "db:migrate:deploy": {},
     "db:push": {},
     "db:seed": {},
+    "db:studio": {},
     "dev": {
       "cache": false,
       "persistent": true
