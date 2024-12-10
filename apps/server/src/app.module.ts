@@ -21,6 +21,9 @@ import { YoutubeCrawlerModule } from './modules/youtube-crawler/youtube-crawler.
           port: parseInt(configService.get('REDIS_PORT')),
           username: configService.get('REDIS_USERNAME'),
           password: configService.get('REDIS_PASSWORD'),
+          tls: {
+            rejectUnauthorized: false,
+          },
         },
         defaultJobOptions: {
           removeOnComplete: true,
