@@ -5,18 +5,17 @@ volumes:
     driver: local
 
 services:
-  mysql:
-    platform: linux/amd64
-    image: mysql:8.0.32
-    container_name: turborepo_mysql
+  postgres:
+    image: postgres:15
+    container_name: turborepo_postgres
     restart: always
     ports:
-      - 3306:3306
+      - 5432:5432
     environment:
-      MYSQL_DATABASE: turborepo
-      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+      POSTGRES_DB: turborepo
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - database:/var/lib/mysql
+      - database:/var/lib/postgresql/data
 
   redis:
     image: redis:alpine
