@@ -1,59 +1,48 @@
 # syntax = docker/dockerfile:1
 
-# Builder stage
-FROM node:20.18.0-slim as builder
-
+# Builder stage for pruning
+FROM node:20.18.0-slim as pruner
 WORKDIR /app
 
-# Install packages needed to build node modules
+# Install turbo for pruning
+RUN npm install -g turbo
+
+# Copy repo files needed for pruning
+COPY . .
+
+# Prune the workspace to only include server and its dependencies
+RUN turbo prune server --docker
+
+# Builder stage
+FROM node:20.18.0-slim as builder
+WORKDIR /app
+
+# Install packages needed to build
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential node-gyp openssl pkg-config python-is-python3
 
-# Install pnpm and turbo
-RUN npm install -g pnpm turbo
+# Install pnpm
+RUN npm install -g pnpm
 
-# Copy workspace configuration
-COPY ../../pnpm-workspace.yaml ./
-COPY ../../pnpm-lock.yaml ./
-COPY ../../package.json ./
-COPY ../../turbo.json ./
-
-# Copy app source
-COPY ../../apps/server ./apps/server
-COPY ../../packages/database ./packages/database
+# First copy only the pruned workspace files needed to install dependencies
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Generate Prisma Client
+# Copy source code from pruned workspace
+COPY --from=pruner /app/out/full/ .
+
+# Generate Prisma Client and build
 RUN pnpm run generate
+RUN pnpm run build
 
-CMD ["tail", "-f", "/dev/null"]
+# Set production environment
+ENV NODE_ENV="production"
 
-# # Build application using turbo
-# RUN pnpm turbo run build --filter=server...
+# Expose the port the app runs on
+EXPOSE 3100
 
-# # Production stage
-# FROM node:20.18.0-slim
-
-# WORKDIR /app
-
-# # Install production dependencies only
-# RUN apt-get update -qq && \
-#     apt-get install --no-install-recommends -y openssl && \
-#     rm -rf /var/lib/apt/lists /var/cache/apt/archives
-
-# # Copy built application
-# COPY --from=builder /app/apps/server/dist ./dist
-# COPY --from=builder /app/apps/server/package.json ./
-# COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-# COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
-# # Set production environment
-# ENV NODE_ENV="production"
-
-# # Expose the port the app runs on
-# EXPOSE 3100
-
-# # Start the server
-# CMD [ "node", "dist/main.js" ]
+# Start the server
+CMD ["pnpm", "run", "--filter=server", "start"]
