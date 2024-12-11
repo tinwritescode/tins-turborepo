@@ -1,0 +1,63 @@
+name: Deploy Server to EC2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/server/**"
+      - "packages/database/**"
+      - ".github/workflows/deploy-server-ec2.yml"
+
+env:
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  EC2_HOST: ${{ secrets.EC2_HOST }}
+  EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+
+jobs:
+  deploy:
+    name: Deploy Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.12.0
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        run: |
+          ssh $EC2_USERNAME@$EC2_HOST << 'EOF'
+            # Navigate to project directory
+            cd /root/app
+
+            # Pull latest changes
+            git pull origin main
+
+            # Install dependencies
+            pnpm install
+
+            # Generate Prisma client
+            pnpm run generate
+
+            # Build the server
+            cd apps/server
+            pnpm run build
+
+            # Restart PM2 process
+            pm2 restart server
+          EOF
