@@ -7,7 +7,7 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: ['http://localhost:3000'], // Allow your board app's origin
+    origin: ['http://localhost:3000', 'https://board.tinnguyen.art'], // Allow your board app's origin
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
   });
