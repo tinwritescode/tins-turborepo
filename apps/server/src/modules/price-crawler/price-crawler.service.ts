@@ -1,9 +1,9 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Queue } from 'bullmq';
+import { QUEUES } from '../../constants/queues';
 import { MoralisService } from '../../services/moralis.service';
 import { PrismaService } from '../../services/prisma.service';
-import { QUEUES } from '../../constants/queues';
 
 @Injectable()
 export class PriceCrawlerService implements OnModuleInit {
@@ -15,14 +15,18 @@ export class PriceCrawlerService implements OnModuleInit {
 
   async onModuleInit() {
     // clean current delay
-    await this.queue.clean(0, 100000, 'delayed');
+    const repeatableJobs = await this.queue.getRepeatableJobs();
+
+    // clean all repeatable jobs
+    for (const job of repeatableJobs) {
+      await this.queue.removeRepeatableByKey(job.key);
+    }
 
     // Add recurring job every 10 seconds
     await this.queue.add(
       'fetch-prices',
       {},
       {
-        repeatJobKey: 'fetch-prices',
         repeat: {
           pattern: '0 */1 * * *', // every 1 hour
         },

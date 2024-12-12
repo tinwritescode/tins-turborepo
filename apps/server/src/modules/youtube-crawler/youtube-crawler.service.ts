@@ -17,14 +17,18 @@ export class YoutubeCrawlerService implements OnModuleInit {
 
   async onModuleInit() {
     // clean current delay
-    await this.queue.clean(0, 100000, 'delayed');
+    const repeatableJobs = await this.queue.getRepeatableJobs();
+
+    // clean all repeatable jobs
+    for (const job of repeatableJobs) {
+      await this.queue.removeRepeatableByKey(job.key);
+    }
 
     // Add recurring job every hour
     await this.queue.add(
       'fetch-videos',
       {},
       {
-        repeatJobKey: 'fetch-videos',
         repeat: {
           pattern: '0 * * * *', // Every hour
         },
