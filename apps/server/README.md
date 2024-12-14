@@ -63,3 +63,14 @@ pnpm run build
 
 # Start the server with PM2
 pm2 start dist/main.js --name server
+
+```
+
+## Redis Setup
+
+### Installing Redis Locally
+
+#### On Ubuntu/Debian:
+
+```bash
+

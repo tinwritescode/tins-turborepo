@@ -1,19 +1,23 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
+  NotFoundException,
+  Param,
   Post,
   Put,
-  Delete,
-  Body,
-  Param,
-  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../services/prisma.service';
+import { YouTubeService } from '../../services/youtube.service';
 import { CreateChannelDto, UpdateChannelDto } from './dto/channel.dto';
 
 @Controller('api/channels')
 export class ChannelController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private youtubeService: YouTubeService,
+  ) {}
 
   @Get()
   async findAll() {
@@ -42,8 +46,29 @@ export class ChannelController {
 
   @Post()
   async create(@Body() data: CreateChannelDto) {
-    return this.prisma.channel.create({
-      data,
+    const isId = /UC.+/.test(data.username);
+
+    let channelInfo: Awaited<
+      ReturnType<typeof this.youtubeService.getChannelInfoById>
+    >;
+
+    if (isId) {
+      channelInfo = await this.youtubeService.getChannelInfoById(data.username);
+    } else {
+      channelInfo = await this.youtubeService.getChannelInfoByUsername(
+        data.username,
+      );
+    }
+
+    return this.prisma.channel.upsert({
+      where: { youtubeId: channelInfo.id },
+      update: {
+        name: channelInfo.name,
+      },
+      create: {
+        youtubeId: channelInfo.id,
+        name: channelInfo.name,
+      },
       include: {
         videos: true,
       },
@@ -60,7 +85,7 @@ export class ChannelController {
           videos: true,
         },
       });
-    } catch (error) {
+    } catch {
       throw new NotFoundException(`Channel with ID ${id} not found`);
     }
   }
@@ -71,7 +96,7 @@ export class ChannelController {
       return await this.prisma.channel.delete({
         where: { id },
       });
-    } catch (error) {
+    } catch {
       throw new NotFoundException(`Channel with ID ${id} not found`);
     }
   }

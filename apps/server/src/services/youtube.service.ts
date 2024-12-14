@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 import { google, youtube_v3 } from 'googleapis';
-import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class YouTubeService {
@@ -38,5 +38,43 @@ export class YouTubeService {
       );
       throw error;
     }
+  }
+
+  async getChannelInfoByUsername(username: string) {
+    const { data } = await axios.get<{
+      items: {
+        id: string;
+      }[];
+    }>(
+      `https://www.googleapis.com/youtube/v3/channels?key=${this.configService.get<string>('YOUTUBE_API_KEY')}&forUsername=${username}&part=id`,
+    );
+
+    console.log(data);
+
+    const id = data.items?.[0]?.id;
+
+    if (!id) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    const channelInfo = await this.getChannelInfoById(id);
+
+    return channelInfo;
+  }
+
+  async getChannelInfoById(id: string) {
+    const channelName = await this.youtube.channels.list({
+      part: ['snippet'],
+      id: [id],
+    });
+
+    if (!channelName.data.items?.[0].snippet?.title) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    return {
+      id,
+      name: channelName.data.items[0].snippet?.title,
+    };
   }
 }

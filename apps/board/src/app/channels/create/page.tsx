@@ -2,7 +2,6 @@
 
 import { Create, useForm } from "@refinedev/antd";
 import { Form, Input } from "antd";
-import React from "react";
 
 export default function ChannelCreate() {
   const { formProps, saveButtonProps } = useForm({});
@@ -10,12 +9,9 @@ export default function ChannelCreate() {
   return (
     <Create saveButtonProps={saveButtonProps}>
       <Form {...formProps} layout="vertical">
-        <Form.Item label="Name" name="name" rules={[{ required: true }]}>
-          <Input />
-        </Form.Item>
         <Form.Item
-          label="YouTube ID"
-          name="youtubeId"
+          label="YouTube Username Or ID"
+          name="username"
           rules={[{ required: true }]}
         >
           <Input />
